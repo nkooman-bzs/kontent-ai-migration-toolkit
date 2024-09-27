@@ -47,15 +47,16 @@ You may migrate content (items & asset) between Kontent.ai environments. For mig
 
 ## Configuration
 
-| Config                  | Value                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| **sourceEnvironmentId** | Id of source environment **(required)**                                                               |
-| **sourceApiKey**        | Management API key of source environment **(required)**                                               |
-| **targetEnvironmentId** | Id of target environment **(required)**                                                               |
-| **targetApiKey**        | Management API key of target environment **(required)**                                               |
-| **language**            | Codename of language that items will be exported in **(required)**                                    |
-| **items**               | Comma separated list of items that will be exported **(required)**                                    |
-| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false` |
+| Config                  | Value                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **sourceEnvironmentId** | Id of source environment **(required)**                                                                                   |
+| **sourceApiKey**        | Management API key of source environment **(required)**                                                                   |
+| **targetEnvironmentId** | Id of target environment **(required)**                                                                                   |
+| **targetApiKey**        | Management API key of target environment **(required)**                                                                   |
+| **language**            | Codename of language that items will be exported in **(required)**                                                        |
+| **items**               | Comma separated list of items that will be exported **(required)**                                                        |
+| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Defaults to `false`                     |
+| failOnError             | Determines whether a migration should stop when an error occurs. Available options: `true` & `false`. Defaults to `true`  |
 
 ## Migrate CLI
 
@@ -77,13 +78,14 @@ kontent-ai-migration-toolkit migrate --targetEnvironmentId=x --targetApiKey=x --
 
 ## Configuration
 
-| Config                  | Value                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| **targetEnvironmentId** | Id of Kontent.ai environment **(required)**                                                           |
-| **targetApiKey**        | Management API key **(required)**                                                                     |
-| **filename**            | Name of the zip file **(required)**                                                                   |
-| baseUrl                 | Custom base URL for Kontent.ai API calls                                                              |
-| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Detaults to `false` |
+| Config                  | Value                                                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **targetEnvironmentId** | Id of Kontent.ai environment **(required)**                                                                             |
+| **targetApiKey**        | Management API key **(required)**                                                                                       |
+| **filename**            | Name of the zip file **(required)**                                                                                     |
+| baseUrl                 | Custom base URL for Kontent.ai API calls                                                                                |
+| force                   | Can be used to disable confirmation prompts. Available options: `true` & `false`. Defaults to `false`                   |
+| failOnError             | Determines whether an import should stop when an error occurs. Available options: `true` & `false`. Defaults to `true`  |
 
 ## Import CLI
 
@@ -99,14 +101,15 @@ you typically only use the `import` capabilities of this repository.
 
 ## Configuration
 
-| Config                  | Value                                                              |
-| ----------------------- | ------------------------------------------------------------------ |
-| **sourceEnvironmentId** | Id of Kontent.ai environment **(required)**                        |
-| **sourceApiKey**        | Management API key of Kontent.ai environment **(required)**        |
-| **language**            | Codename of language that items will be exported in **(required)** |
-| **items**               | Comma separated list of items that will be exported **(required)** |
-| filename                | Name of the zip file                                               |
-| baseUrl                 | Custom base URL for Kontent.ai API calls                           |
+| Config                  | Value                                                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **sourceEnvironmentId** | Id of Kontent.ai environment **(required)**                                                                             |
+| **sourceApiKey**        | Management API key of Kontent.ai environment **(required)**                                                             |
+| **language**            | Codename of language that items will be exported in **(required)**                                                      |
+| **items**               | Comma separated list of items that will be exported **(required)**                                                      |
+| filename                | Name of the zip file                                                                                                    |
+| baseUrl                 | Custom base URL for Kontent.ai API calls                                                                                |
+| failOnError             | Determines whether an export should stop when an error occurs. Available options: `true` & `false`. Defaults to `true`  |
 
 ## Export CLI
 
@@ -248,7 +251,7 @@ asset will be created in target environment.
 ### How are referenced content items & asset handled?
 
 If you have a reference to a content item or asset (i.e. in linked items element, asset element, rich text element...) the migration toolkit
-first checks whether the referenced object exists (based on item or asset `codename`) and if it does, successfuly sets the reference. If the
+first checks whether the referenced object exists (based on item or asset `codename`) and if it does, successfully sets the reference. If the
 object does not exist, it will be referenced by an `external_id` which creates a placeholder for the item until it becomes available.
 
 See the table below to learn how `external_id` is generated by default:

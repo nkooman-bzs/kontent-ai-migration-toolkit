@@ -76,6 +76,7 @@ export interface ImportConfig extends ManagementClientConfig {
     readonly data: MigrationData;
     readonly externalIdGenerator?: ExternalIdGenerator;
     readonly logger?: Logger;
+    readonly failOnError?: boolean;
 }
 
 export interface ImportResult {

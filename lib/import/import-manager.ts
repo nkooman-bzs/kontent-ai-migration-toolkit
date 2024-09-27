@@ -40,7 +40,8 @@ export function importManager(config: ImportConfig) {
         return await contentItemsImporter({
             client: targetEnvironmentClient,
             importContext: importContext,
-            logger: logger
+            logger: logger,
+            failOnError: config.failOnError ?? true
         }).importAsync();
     };
 

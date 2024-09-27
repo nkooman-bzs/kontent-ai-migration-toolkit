@@ -9,6 +9,7 @@ export async function importActionAsync(argsFetcher: CliArgumentsFetcher): Promi
     const baseUrl = argsFetcher.getOptionalArgumentValue('baseUrl');
     const force = argsFetcher.getBooleanArgumentValue('force', false);
     const filename = argsFetcher.getOptionalArgumentValue('filename') ?? defaultZipFilename;
+    const failOnError = argsFetcher.getBooleanArgumentValue('failOnError', true);
 
     await confirmImportAsync({
         force: force,
@@ -27,7 +28,8 @@ export async function importActionAsync(argsFetcher: CliArgumentsFetcher): Promi
         data: importData,
         baseUrl: baseUrl,
         environmentId: environmentId,
-        apiKey: apiKey
+        apiKey: apiKey,
+        failOnError: failOnError
     });
 
     log.log({ type: 'completed', message: `Import has been successful` });

@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import pLimit from 'p-limit';
 import { ItemInfo } from '../models/core.models.js';
 import { LogSpinnerData, Logger } from '../models/log.models.js';
+import { extractErrorData } from '../utils/error.utils.js';
 
 type ProcessSetAction =
     | 'Fetching assets'
@@ -21,6 +22,7 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
     readonly parallelLimit: number;
     readonly processAsync: (item: Readonly<InputItem>, logSpinner: LogSpinnerData) => Promise<Readonly<OutputItem>>;
     readonly itemInfo: (item: Readonly<InputItem>) => ItemInfo;
+    readonly failOnError?: boolean;
 }): Promise<readonly OutputItem[]> {
     if (!data.items.length) {
         return [];
@@ -32,7 +34,7 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
         const limit = pLimit(data.parallelLimit);
         let processedItemsCount: number = 1;
 
-        const requests: Promise<OutputItem>[] = data.items.map((item) =>
+        const requests = data.items.map((item) =>
             limit(() => {
                 return data.processAsync(item, logSpinner).then((output) => {
                     const itemInfo = data.itemInfo(item);
@@ -46,6 +48,24 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
 
                     processedItemsCount++;
                     return output;
+                }).catch(error => {
+                    if (data.failOnError ?? true) {
+                        throw error;
+                    }
+
+                    const errorData = extractErrorData(error);
+                    const itemInfo = data.itemInfo(item);
+
+                    data.logger.log({
+                        type: 'error',
+                        message: `Failed to process item: '${itemInfo.title}'`
+                    });
+                    data.logger.log({
+                        type: 'error',
+                        message: errorData.message
+                    })
+
+                    return null;
                 });
             })
         );
@@ -58,7 +78,7 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
         });
 
         // Only '<parallelLimit>' promises at a time
-        const outputItems = await Promise.all(requests);
+        const outputItems: OutputItem[] = (await Promise.all(requests)).filter((item) => item !== null);
 
         logSpinner({ type: 'info', message: `Completed '${chalk.yellow(data.action)}' (${outputItems.length})` });
 

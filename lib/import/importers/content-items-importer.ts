@@ -14,6 +14,7 @@ export function contentItemsImporter(data: {
     readonly logger: Logger;
     readonly client: Readonly<ManagementClient>;
     readonly importContext: ImportContext;
+    readonly failOnError: boolean;
 }) {
     const shouldUpdateContentItem = (
         migrationContentItem: MigrationItem,
@@ -123,6 +124,7 @@ export function contentItemsImporter(data: {
             action: 'Importing content items',
             logger: data.logger,
             parallelLimit: 1,
+            failOnError: data.failOnError,
             items: contentItemsToImport,
             itemInfo: (item) => {
                 return {

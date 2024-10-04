@@ -101,16 +101,19 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         return data.exportElement.value
             .map((m) => m.id)
             .filter(isNotUndefined)
-            .map<MigrationReference>((id) => {
+            .map<MigrationReference | undefined>((id) => {
                 const itemState = data.context.getItemStateInSourceEnvironment(id);
 
                 if (itemState.item) {
                     // reference item by codename
                     return { codename: itemState.item.codename };
+                } else if (data.skipMissingLinkedItems) {
+                    return undefined;
                 } else {
                     throw Error(`Missing item with id '${chalk.red(id)}'`);
                 }
-            });
+            })
+            .filter(isNotUndefined);
     },
     custom: (data) => data.exportElement.value?.toString(),
     url_slug: (data) => {

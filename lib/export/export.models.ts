@@ -43,6 +43,7 @@ export type ExportTransformFunc = (data: {
     readonly typeElement: FlattenedContentTypeElement;
     readonly exportElement: ExportElement;
     readonly context: ExportContext;
+    readonly skipMissingLinkedItems?: boolean;
 }) => MigrationElementValue;
 
 export interface ExportContext {
@@ -62,6 +63,7 @@ export interface SourceExportItem {
 export interface ExportConfig extends ManagementClientConfig {
     readonly exportItems: readonly SourceExportItem[];
     readonly logger?: Logger;
+    readonly skipMissingLinkedItems?: boolean;
 }
 
 export interface DefaultExportContextConfig {

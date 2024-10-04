@@ -136,6 +136,7 @@ export function exportManager(config: ExportConfig) {
             return exportTransforms[data.typeElement.type]({
                 context: data.context,
                 typeElement: data.typeElement,
+                skipMissingLinkedItems: config.skipMissingLinkedItems,
                 exportElement: {
                     components: data.exportElement.components.map((component) => mapToMigrationComponent(data.context, component)),
                     value: data.exportElement.value,

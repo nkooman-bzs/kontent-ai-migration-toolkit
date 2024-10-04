@@ -34,34 +34,37 @@ export function exportManager(config: ExportConfig) {
     };
 
     const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem): Readonly<MigrationItem> => {
-        const migrationItem: MigrationItem = {
-            system: {
-                name: exportItem.contentItem.name,
-                codename: exportItem.contentItem.codename,
-                language: { codename: exportItem.language.codename },
-                type: { codename: exportItem.contentType.contentTypeCodename },
-                collection: { codename: exportItem.collection.codename },
-                workflow: {
-                    codename: exportItem.workflow.codename
-                }
-            },
-            versions: exportItem.versions.map((version) => {
-                return <MigrationItemVersion>{
-                    elements: getMigrationElements(context, exportItem.contentType, version.languageVariant.elements),
-                    schedule: {
-                        publish_time: version.languageVariant.schedule.publishTime ?? undefined,
-                        publish_display_timezone: version.languageVariant.schedule.publishDisplayTimezone ?? undefined,
-                        unpublish_display_timezone: version.languageVariant.schedule.unpublishDisplayTimezone ?? undefined,
-                        unpublish_time: version.languageVariant.schedule.unpublishTime ?? undefined
-                    },
-                    workflow_step: {
-                        codename: version.workflowStepCodename
+        try {
+            const migrationItem: MigrationItem = {
+                system: {
+                    name: exportItem.contentItem.name,
+                    codename: exportItem.contentItem.codename,
+                    language: { codename: exportItem.language.codename },
+                    type: { codename: exportItem.contentType.contentTypeCodename },
+                    collection: { codename: exportItem.collection.codename },
+                    workflow: {
+                        codename: exportItem.workflow.codename
                     }
-                };
-            })
-        };
-
-        return migrationItem;
+                },
+                versions: exportItem.versions.map((version) => {
+                    return <MigrationItemVersion>{
+                        elements: getMigrationElements(context, exportItem.contentType, version.languageVariant.elements),
+                        schedule: {
+                            publish_time: version.languageVariant.schedule.publishTime ?? undefined,
+                            publish_display_timezone: version.languageVariant.schedule.publishDisplayTimezone ?? undefined,
+                            unpublish_display_timezone: version.languageVariant.schedule.unpublishDisplayTimezone ?? undefined,
+                            unpublish_time: version.languageVariant.schedule.unpublishTime ?? undefined
+                        },
+                        workflow_step: {
+                            codename: version.workflowStepCodename
+                        }
+                    };
+                })
+            };
+            return migrationItem;
+        } catch (error) {
+            throw new Error(`Failed to map item '${chalk.yellow(exportItem.contentItem.name)}': '${chalk.red(exportItem.contentItem.codename)}'. ${error as string}`);
+        }
     };
 
     const mapToMigrationComponent = (
@@ -152,7 +155,7 @@ export function exportManager(config: ExportConfig) {
             throw new Error(
                 `Failed to map value of element '${chalk.yellow(data.typeElement.codename)}' of type '${chalk.cyan(
                     data.typeElement.type
-                )}'. Value: ${chalk.bgMagenta(jsonValue)}. Message: ${errorData.message}`
+                )}' in '${chalk.cyan(data.contentType.contentTypeCodename)}'. Value: ${chalk.bgMagenta(jsonValue)}. Message: ${errorData.message}`
             );
         }
     };

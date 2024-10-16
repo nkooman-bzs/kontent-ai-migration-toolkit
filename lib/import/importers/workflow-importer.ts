@@ -6,7 +6,8 @@ import {
     MigrationItem,
     workflowHelper as workflowHelperInit,
     MigrationItemVersion,
-    WorkflowStep
+    WorkflowStep,
+    isBadPublish
 } from '../../core/index.js';
 import { match } from 'ts-pattern';
 
@@ -24,14 +25,24 @@ export function workflowImporter(config: {
         await runMapiRequestAsync({
             logger: config.logger,
             func: async () =>
-                (
-                    await config.managementClient
-                        .publishLanguageVariant()
-                        .byItemCodename(data.migrationItem.system.codename)
-                        .byLanguageCodename(data.migrationItem.system.language.codename)
-                        .withoutData()
-                        .toPromise()
-                ).data,
+                await config.managementClient
+                    .publishLanguageVariant()
+                    .byItemCodename(data.migrationItem.system.codename)
+                    .byLanguageCodename(data.migrationItem.system.language.codename)
+                    .withoutData()
+                    .toPromise()
+                    .then((response) => response.data)
+                    .catch((error) => {
+                        if (isBadPublish(error)) {
+                            data.logSpinner({
+                                type: 'error',
+                                message: `Publish failed for item "${data.migrationItem.system.name}" (${data.migrationItem.system.codename}), it's likely there's new element limitations that are not met by the imported data. Error received: ${error.message}. Validation errors: ${JSON.stringify(error.validationErrors, null, 2)}`
+                            })
+                            return;
+                        }
+
+                        throw error;
+                    }),
             action: 'publish',
             type: 'languageVariant',
             logSpinner: data.logSpinner,
@@ -352,13 +363,15 @@ export function workflowImporter(config: {
                     // do nothing for scheduled step
                     () => Promise.resolve()
                 )
-                .otherwise(() => changeWorkflowOfLanguageVariantAsync({
-                    ...data,
-                    step: {
-                        codename: stepCodename,
-                        id: ''
-                    }
-                }));
+                .otherwise(() =>
+                    changeWorkflowOfLanguageVariantAsync({
+                        ...data,
+                        step: {
+                            codename: stepCodename,
+                            id: ''
+                        }
+                    })
+                );
         }
     };
 

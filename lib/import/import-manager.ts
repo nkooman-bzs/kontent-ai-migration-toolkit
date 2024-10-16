@@ -26,7 +26,8 @@ export function importManager(config: ImportConfig) {
         return await assetsImporter({
             client: targetEnvironmentClient,
             importContext: importContext,
-            logger: logger
+            logger: logger,
+            failOnError: config.failOnError ?? true
         }).importAsync();
     };
     const importContentItemsAsync = async (importContext: ImportContext): Promise<readonly Readonly<ContentItemModels.ContentItem>[]> => {
@@ -60,7 +61,8 @@ export function importManager(config: ImportConfig) {
             client: targetEnvironmentClient,
             importContext: importContext,
             logger: logger,
-            preparedContentItems: contentItems
+            preparedContentItems: contentItems,
+            failOnError: config.failOnError ?? true
         }).importAsync();
     };
 

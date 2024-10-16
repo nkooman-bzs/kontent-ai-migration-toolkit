@@ -129,6 +129,7 @@ export function contentItemsImporter(data: {
             itemInfo: (item) => {
                 return {
                     itemType: 'contentItem',
+                    codename: item.system.codename,
                     title: `${item.system.codename} -> ${item.system.language.codename}`
                 };
             },

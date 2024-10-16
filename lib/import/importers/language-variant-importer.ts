@@ -25,6 +25,7 @@ export function languageVariantImporter(config: {
     readonly preparedContentItems: readonly ContentItemModels.ContentItem[];
     readonly importContext: ImportContext;
     readonly client: Readonly<ManagementClient>;
+    readonly failOnError: boolean;
 }) {
     const workflowImporter = workflowImporterInit({
         logger: config.logger,
@@ -311,10 +312,12 @@ export function languageVariantImporter(config: {
                 logger: config.logger,
                 parallelLimit: 1,
                 items: config.importContext.categorizedImportData.contentItems,
+                failOnError: config.failOnError,
                 itemInfo: (input) => {
                     return {
                         itemType: 'languageVariant',
                         title: input.system.name,
+                        codename: input.system.codename,
                         partA: input.system.language.codename
                     };
                 },

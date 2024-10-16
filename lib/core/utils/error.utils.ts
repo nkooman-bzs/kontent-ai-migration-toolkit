@@ -69,6 +69,18 @@ export function is404Error(error: unknown): boolean {
     return false;
 }
 
+export function isBadPublish(error: unknown): error is SharedModels.ContentManagementBaseKontentError {
+    if (error instanceof SharedModels.ContentManagementBaseKontentError) {
+        if (error.errorCode === 4040027) {
+            return true;
+        }
+
+        return false;
+    }
+
+    return false;
+}
+
 export function handleError(error: unknown): void {
     const errorData = extractErrorData(error);
 

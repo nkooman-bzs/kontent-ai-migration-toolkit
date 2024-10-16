@@ -55,15 +55,12 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
 
                     const errorData = extractErrorData(error);
                     const itemInfo = data.itemInfo(item);
-
-                    data.logger.log({
+                    const codename = 'codename' in itemInfo ? `(${itemInfo.codename as string})` : '';
+                    
+                    logSpinner({
                         type: 'error',
-                        message: `Failed to process item: '${itemInfo.title}'`
+                        message: `Failed to process item: '${itemInfo.title}' ${codename}. Message: ${errorData.message}`
                     });
-                    data.logger.log({
-                        type: 'error',
-                        message: errorData.message
-                    })
 
                     return null;
                 });

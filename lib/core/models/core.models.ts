@@ -48,6 +48,7 @@ export type LanguageVariantWorkflowState =
 
 export interface ItemInfo {
     readonly title: string;
+    // readonly codename: string;
     readonly itemType: MapiType | MigrationItemType;
 }
 

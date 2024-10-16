@@ -25,6 +25,7 @@ export function assetsImporter(data: {
     readonly logger: Logger;
     readonly client: Readonly<ManagementClient>;
     readonly importContext: ImportContext;
+    readonly failOnError: boolean;
 }) {
     const getAssetsToUpload = (): readonly MigrationAsset[] => {
         return data.importContext.categorizedImportData.assets
@@ -170,13 +171,19 @@ export function assetsImporter(data: {
         return await runMapiRequestAsync({
             logger: data.logger,
             func: async () => {
+                const contentType = mime.getType(migrationAsset.filename);
+
+                if (!contentType) {
+                    throw new Error(`Could not determine content type for file '${migrationAsset.filename}'`);
+                }
+
                 return (
                     await data.client
                         .uploadBinaryFile()
                         .withData({
                             binaryData: migrationAsset.binaryData,
                             contentLength: geSizeInBytes(migrationAsset.binaryData),
-                            contentType: mime.getType(migrationAsset.filename) ?? '',
+                            contentType: contentType,
                             filename: migrationAsset.filename
                         })
                         .toPromise()
@@ -200,6 +207,7 @@ export function assetsImporter(data: {
             logger: data.logger,
             parallelLimit: 3,
             items: assetsToUpload,
+            failOnError: data.failOnError,
             itemInfo: (input) => {
                 return {
                     itemType: 'asset',

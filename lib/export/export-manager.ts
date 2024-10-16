@@ -30,10 +30,10 @@ export function exportManager(config: ExportConfig) {
     const managementClient = getMigrationManagementClient(config);
 
     const getMigrationItems = (context: ExportContext): readonly MigrationItem[] => {
-        return context.exportItems.map<MigrationItem>((exportItem) => mapToMigrationItem(context, exportItem));
+        return context.exportItems.map<MigrationItem | null>((exportItem) => mapToMigrationItem(context, exportItem)).filter(item => item !== null);
     };
 
-    const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem): Readonly<MigrationItem> => {
+    const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem): Readonly<MigrationItem | null> => {
         try {
             const migrationItem: MigrationItem = {
                 system: {
@@ -63,7 +63,17 @@ export function exportManager(config: ExportConfig) {
             };
             return migrationItem;
         } catch (error) {
-            throw new Error(`Failed to map item '${chalk.yellow(exportItem.contentItem.name)}': '${chalk.red(exportItem.contentItem.codename)}'. ${error as string}`);
+            const errorMessage = `Failed to map item '${chalk.yellow(exportItem.contentItem.name)}': '${chalk.red(exportItem.contentItem.codename)}'. ${error as string}`;
+
+            if (!config.skipMissingLinkedItems) {
+                throw new Error(errorMessage);
+            }
+            
+            logger.log({
+                type: 'error',
+                message: errorMessage
+            });
+            return null;
         }
     };
 

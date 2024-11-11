@@ -1,6 +1,6 @@
 import { ExportContext, ExportConfig, ExportItem } from './export.models.js';
 import chalk from 'chalk';
-import { AssetFolderModels, AssetModels, CollectionModels, ElementModels } from '@kontent-ai/management-sdk';
+import { AssetFolderModels, AssetModels, CollectionModels, ContentItemModels, ElementModels } from '@kontent-ai/management-sdk';
 import {
     MigrationAsset,
     MigrationItem,
@@ -48,7 +48,7 @@ export function exportManager(config: ExportConfig) {
                 },
                 versions: exportItem.versions.map((version) => {
                     return <MigrationItemVersion>{
-                        elements: getMigrationElements(context, exportItem.contentType, version.languageVariant.elements),
+                        elements: getMigrationElements(context, exportItem.contentType, version.languageVariant.elements, exportItem.contentItem),
                         schedule: {
                             publish_time: version.languageVariant.schedule.publishTime ?? undefined,
                             publish_display_timezone: version.languageVariant.schedule.publishDisplayTimezone ?? undefined,
@@ -79,7 +79,8 @@ export function exportManager(config: ExportConfig) {
 
     const mapToMigrationComponent = (
         context: ExportContext,
-        component: Readonly<ElementModels.ContentItemElementComponent>
+        component: Readonly<ElementModels.ContentItemElementComponent>,
+        contentItem: Readonly<ContentItemModels.ContentItem>
     ): MigrationComponent => {
         const componentType = context.environmentData.contentTypes.find((m) => m.contentTypeId === component.type.id);
 
@@ -94,7 +95,7 @@ export function exportManager(config: ExportConfig) {
                     codename: componentType.contentTypeCodename
                 }
             },
-            elements: getMigrationElements(context, componentType, component.elements)
+            elements: getMigrationElements(context, componentType, component.elements, contentItem)
         };
 
         return migrationItem;
@@ -103,7 +104,8 @@ export function exportManager(config: ExportConfig) {
     const getMigrationElements = (
         context: ExportContext,
         contentType: FlattenedContentType,
-        elements: readonly Readonly<ElementModels.ContentItemElement>[]
+        elements: readonly Readonly<ElementModels.ContentItemElement>[],
+        contentItem: Readonly<ContentItemModels.ContentItem>
     ): MigrationElements => {
         return contentType.elements
             .toSorted((a, b) => {
@@ -128,7 +130,8 @@ export function exportManager(config: ExportConfig) {
                         context: context,
                         contentType: contentType,
                         exportElement: itemElement,
-                        typeElement: typeElement
+                        typeElement: typeElement,
+                        contentItem,
                     })
                 };
 
@@ -141,14 +144,17 @@ export function exportManager(config: ExportConfig) {
         contentType: FlattenedContentType;
         typeElement: FlattenedContentTypeElement;
         exportElement: ElementModels.ContentItemElement;
+        contentItem: Readonly<ContentItemModels.ContentItem>;
     }): MigrationElementValue => {
         try {
             return exportTransforms[data.typeElement.type]({
                 context: data.context,
                 typeElement: data.typeElement,
+                contentItem: data.contentItem,
                 skipMissingLinkedItems: config.skipMissingLinkedItems,
+                logger: logger,
                 exportElement: {
-                    components: data.exportElement.components.map((component) => mapToMigrationComponent(data.context, component)),
+                    components: data.exportElement.components.map((component) => mapToMigrationComponent(data.context, component, data.contentItem)),
                     value: data.exportElement.value,
                     urlSlugMode: data.exportElement.mode
                 }
@@ -159,6 +165,10 @@ export function exportManager(config: ExportConfig) {
 
             try {
                 jsonValue = JSON.stringify(data.exportElement.value);
+
+                if (jsonValue.length > 500) {
+                    jsonValue = `${jsonValue.substring(0, 500)}...`;
+                }
             } catch (jsonError) {
                 console.error(`Failed to convert json value`, jsonError);
             }

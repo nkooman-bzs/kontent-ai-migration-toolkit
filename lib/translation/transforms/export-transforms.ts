@@ -1,4 +1,5 @@
 import {
+    Logger,
     MigrationElementType,
     MigrationReference,
     MigrationRichTextElementValue,
@@ -6,7 +7,7 @@ import {
     findRequired,
     isNotUndefined
 } from '../../core/index.js';
-import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
+import { ContentItemModels, ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
 import { ExportTransformFunc, ExportContext, ExportElement } from '../../export/index.js';
 import { richTextProcessor } from '../helpers/rich-text.processor.js';
 import chalk from 'chalk';
@@ -29,7 +30,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         return +data.exportElement.value;
     },
     date_time: (data) => data.exportElement.value?.toString(),
-    rich_text: (data) => transformRichTextValue(data.exportElement, data.context),
+    rich_text: (data) => transformRichTextValue(data.exportElement, data.context, data.logger, data.skipMissingLinkedItems, data.contentItem),
     asset: (data) => {
         if (!data.exportElement.value) {
             return [];
@@ -196,7 +197,10 @@ function findTaxonomy(termId: string, taxonomy: Readonly<TaxonomyModels.Taxonomy
 
 function transformRichTextValue(
     exportElement: ExportElement | undefined,
-    context: ExportContext
+    context: ExportContext,
+    logger: Logger,
+    skipMissingLinkedItems: boolean | undefined,
+    contentItem: ContentItemModels.ContentItem
 ): MigrationRichTextElementValue | undefined {
     if (!exportElement || !exportElement.value) {
         return {
@@ -211,52 +215,96 @@ function transformRichTextValue(
     richTextHtml = richTextProcessor().processDataIds(richTextHtml, (id) => {
         const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
-        if (!itemInEnv) {
-            throw Error(`Failed to get item with id '${chalk.red(id)}'`);
+        if (itemInEnv) {
+            return {
+                codename: itemInEnv.codename
+            };
         }
 
-        return {
-            codename: itemInEnv.codename
-        };
+        if (skipMissingLinkedItems) {
+            logger.log({
+                type: 'error',
+                message: `Failed to get linked item with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+            })
+
+            return {
+                codename: null
+            };
+        }
+
+        throw Error(`Failed to get item with id '${chalk.red(id)}'`);
     }).html;
 
     // replace link item ids with codenames
     richTextHtml = richTextProcessor().processLinkItemIds(richTextHtml, (id) => {
         const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
-        if (!itemInEnv) {
-            throw Error(`Failed to get item with id '${chalk.red(id)}'`);
+        if (itemInEnv) {
+            return {
+                codename: itemInEnv.codename
+            };
         }
 
-        return {
-            codename: itemInEnv.codename
-        };
+        if (skipMissingLinkedItems) {
+            logger.log({
+                type: 'error',
+                message: `Failed to get linked item with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+            })
+
+            return {
+                codename: null
+            };
+        }
+
+        throw Error(`Failed to get item with id '${chalk.red(id)}'`);
     }).html;
 
     // replace asset ids with codenames
     richTextHtml = richTextProcessor().processAssetIds(richTextHtml, (id) => {
         const assetInEnv = context.getAssetStateInSourceEnvironment(id).asset;
 
-        if (!assetInEnv) {
-            throw Error(`Failed to get asset with id '${chalk.red(id)}'`);
+        if (assetInEnv) {
+            return {
+                codename: assetInEnv.codename
+            };
         }
 
-        return {
-            codename: assetInEnv.codename
-        };
+        if (skipMissingLinkedItems) {
+            logger.log({
+                type: 'error',
+                message: `Failed to get linked asset with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+            })
+
+            return {
+                codename: null
+            };
+        }
+
+        throw Error(`Failed to get asset with id '${chalk.red(id)}'`);
     }).html;
 
     // replace link asset ids with codenames
     richTextHtml = richTextProcessor().processLinkAssetIds(richTextHtml, (id) => {
         const assetInEnv = context.getAssetStateInSourceEnvironment(id).asset;
 
-        if (!assetInEnv) {
-            throw Error(`Failed to get asset with id '${chalk.red(id)}'`);
+        if (assetInEnv) {
+            return {
+                codename: assetInEnv.codename
+            };
         }
 
-        return {
-            codename: assetInEnv.codename
-        };
+        if (skipMissingLinkedItems) {
+            logger.log({
+                type: 'error',
+                message: `Failed to get linked asset with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+            })
+
+            return {
+                codename: null
+            };
+        }
+
+        throw Error(`Failed to get asset with id '${chalk.red(id)}'`);
     }).html;
 
     return {

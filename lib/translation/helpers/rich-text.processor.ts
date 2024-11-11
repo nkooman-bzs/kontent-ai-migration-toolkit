@@ -1,7 +1,7 @@
 import { AssetStateInTargetEnvironmentByCodename, ItemStateInTargetEnvironmentByCodename } from 'lib/core/index.js';
 
 type CodenameReplaceFunc<T> = (codename: string) => T;
-type IdReplaceFunc = (id: string) => { codename: string };
+type IdReplaceFunc = (id: string) => { codename: string | null };
 
 interface ProcessCodenamesResult {
     readonly codenames: ReadonlySet<string>;
@@ -74,6 +74,13 @@ export function richTextProcessor() {
                 if (replaceFunc) {
                     const { codename } = replaceFunc(itemId);
 
+                    if (codename === null) {
+                        return objectTag.replaceAll(
+                            `${attributes.ids.idAttributeName}="${itemId}"`,
+                            `${attributes.ids.itemExternalIdAttributeName}="migration_missing_linked_item"`
+                        );
+                    }
+
                     return objectTag.replaceAll(
                         `${attributes.ids.idAttributeName}="${itemId}"`,
                         `${attributes.codenames.itemCodenameAttribute}="${codename}"`
@@ -109,6 +116,13 @@ export function richTextProcessor() {
 
                 if (replaceFunc) {
                     const { codename } = replaceFunc(assetId);
+
+                    if (codename === null) {
+                        return figureTag.replaceAll(
+                            `${attributes.ids.assetIdAttributeName}="${assetId}"`,
+                            `${attributes.ids.externalAssetIdAttributeName}="migration_missing_linked_item"`
+                        );
+                    }
 
                     return figureTag.replaceAll(
                         `${attributes.ids.assetIdAttributeName}="${assetId}"`,
@@ -146,6 +160,13 @@ export function richTextProcessor() {
                 if (replaceFunc) {
                     const { codename } = replaceFunc(assetId);
 
+                    if (codename === null) {
+                        return linkTag.replaceAll(
+                            `${attributes.ids.assetIdAttributeName}="${assetId}"`,
+                            `${attributes.ids.externalAssetIdAttributeName}="migration_missing_linked_item"`
+                        );
+                    }
+
                     return linkTag.replaceAll(
                         `${attributes.ids.assetIdAttributeName}="${assetId}"`,
                         `${attributes.codenames.assetCodenameAttribute}="${codename}"`
@@ -180,6 +201,13 @@ export function richTextProcessor() {
 
                 if (replaceFunc) {
                     const { codename } = replaceFunc(itemId);
+
+                    if (codename === null) {
+                        return linkTag.replaceAll(
+                            `${attributes.ids.itemIdAttributeName}="${itemId}"`,
+                            `${attributes.ids.itemExternalIdAttributeName}="migration_missing_linked_item"`
+                        );
+                    }
 
                     return linkTag.replaceAll(
                         `${attributes.ids.itemIdAttributeName}="${itemId}"`,
@@ -227,7 +255,7 @@ export function richTextProcessor() {
 
                     return objectTag.replaceAll(
                         `${attributes.codenames.itemCodenameAttribute}="${codename}"`,
-                        `${attributes.ids.externalIdAttributeName}="${itemState.externalIdToUse}"`
+                        `${attributes.ids.itemExternalIdAttributeName}="${itemState.externalIdToUse}"`
                     );
                 }
             }

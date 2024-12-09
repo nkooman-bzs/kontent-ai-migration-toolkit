@@ -58,8 +58,10 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
                     const codename = 'codename' in itemInfo ? `(${itemInfo.codename as string})` : '';
                     
                     logSpinner({
-                        type: 'error',
-                        message: `Failed to process item: '${itemInfo.title}' ${codename}. Message: ${errorData.message}`
+                        type: 'processingError',
+                        message: `Failed to process item: '${itemInfo.title}' ${codename}. Message: ${errorData.message}`,
+                        itemCodename: 'codename' in itemInfo ? itemInfo.codename as string : undefined,
+                        itemName: itemInfo.title
                     });
 
                     return null;

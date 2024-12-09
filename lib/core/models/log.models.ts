@@ -1,5 +1,11 @@
 import { MigrationItemType, MapiAction, MapiType } from '../index.js';
 
+type MigrationToolErrorType =
+    | 'linkedItemsError'
+    | 'mapError'
+    | 'publishError'
+    | 'processingError'
+
 export type DebugType =
     | 'error'
     | 'completed'
@@ -12,6 +18,7 @@ export type DebugType =
     | 'skip'
     | 'writeFs'
     | 'download'
+    | MigrationToolErrorType
     | MigrationItemType
     | MapiType
     | MapiAction;
@@ -19,6 +26,8 @@ export type DebugType =
 export interface LogMessage {
     readonly type: DebugType;
     readonly message: string;
+    readonly itemName?: string;
+    readonly itemCodename?: string;
 }
 
 export interface LogSpinnerMessage extends LogMessage {

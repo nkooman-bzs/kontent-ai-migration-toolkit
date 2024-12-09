@@ -70,8 +70,10 @@ export function exportManager(config: ExportConfig) {
             }
             
             logger.log({
-                type: 'error',
-                message: errorMessage
+                type: 'mapError',
+                message: errorMessage,
+                itemName: exportItem.contentItem.name,
+                itemCodename: exportItem.contentItem.codename
             });
             return null;
         }
@@ -165,10 +167,6 @@ export function exportManager(config: ExportConfig) {
 
             try {
                 jsonValue = JSON.stringify(data.exportElement.value);
-
-                if (jsonValue.length > 500) {
-                    jsonValue = `${jsonValue.substring(0, 500)}...`;
-                }
             } catch (jsonError) {
                 console.error(`Failed to convert json value`, jsonError);
             }

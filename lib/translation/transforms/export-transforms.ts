@@ -223,8 +223,10 @@ function transformRichTextValue(
 
         if (skipMissingLinkedItems) {
             logger.log({
-                type: 'error',
+                type: 'linkedItemsError',
                 message: `Failed to get linked item with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+                itemCodename: contentItem.codename,
+                itemName: contentItem.name,
             })
 
             return {
@@ -247,8 +249,10 @@ function transformRichTextValue(
 
         if (skipMissingLinkedItems) {
             logger.log({
-                type: 'error',
+                type: 'linkedItemsError',
                 message: `Failed to get linked item with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+                itemCodename: contentItem.codename,
+                itemName: contentItem.name,
             })
 
             return {
@@ -271,8 +275,10 @@ function transformRichTextValue(
 
         if (skipMissingLinkedItems) {
             logger.log({
-                type: 'error',
+                type: 'linkedItemsError',
                 message: `Failed to get linked asset with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+                itemCodename: contentItem.codename,
+                itemName: contentItem.name,
             })
 
             return {
@@ -295,8 +301,10 @@ function transformRichTextValue(
 
         if (skipMissingLinkedItems) {
             logger.log({
-                type: 'error',
+                type: 'linkedItemsError',
                 message: `Failed to get linked asset with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+                itemCodename: contentItem.codename,
+                itemName: contentItem.name,
             })
 
             return {

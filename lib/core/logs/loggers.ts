@@ -58,7 +58,7 @@ function getLogDataMessage(data: LogSpinnerMessage): string {
     const color = match(data.type)
         .returnType<ChalkInstance>()
         .with('info', () => chalk.cyan)
-        .with(P.union('error', 'errorData', 'warning', 'cancel'), () => chalk.red)
+        .with(P.union('error', 'errorData', 'warning', 'cancel', 'linkedItemsError', 'publishError', 'processingError'), () => chalk.red)
         .with('completed', () => chalk.green)
         .with('skip', () => chalk.gray)
         .otherwise(() => chalk.yellow);

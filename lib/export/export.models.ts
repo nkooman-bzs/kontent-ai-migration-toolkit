@@ -44,6 +44,7 @@ export type ExportTransformFunc = (data: {
     readonly exportElement: ExportElement;
     readonly context: ExportContext;
     readonly contentItem: ContentItemModels.ContentItem;
+    readonly language: string;
     readonly logger: Logger;
     readonly skipMissingLinkedItems?: boolean;
 }) => MigrationElementValue;

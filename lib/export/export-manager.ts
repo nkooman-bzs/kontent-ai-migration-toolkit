@@ -48,7 +48,7 @@ export function exportManager(config: ExportConfig) {
                 },
                 versions: exportItem.versions.map((version) => {
                     return <MigrationItemVersion>{
-                        elements: getMigrationElements(context, exportItem.contentType, version.languageVariant.elements, exportItem.contentItem),
+                        elements: getMigrationElements(context, exportItem.contentType, version.languageVariant.elements, exportItem.contentItem, exportItem.language.codename),
                         schedule: {
                             publish_time: version.languageVariant.schedule.publishTime ?? undefined,
                             publish_display_timezone: version.languageVariant.schedule.publishDisplayTimezone ?? undefined,
@@ -82,7 +82,8 @@ export function exportManager(config: ExportConfig) {
     const mapToMigrationComponent = (
         context: ExportContext,
         component: Readonly<ElementModels.ContentItemElementComponent>,
-        contentItem: Readonly<ContentItemModels.ContentItem>
+        contentItem: Readonly<ContentItemModels.ContentItem>,
+        language: string
     ): MigrationComponent => {
         const componentType = context.environmentData.contentTypes.find((m) => m.contentTypeId === component.type.id);
 
@@ -97,7 +98,7 @@ export function exportManager(config: ExportConfig) {
                     codename: componentType.contentTypeCodename
                 }
             },
-            elements: getMigrationElements(context, componentType, component.elements, contentItem)
+            elements: getMigrationElements(context, componentType, component.elements, contentItem, language)
         };
 
         return migrationItem;
@@ -107,7 +108,8 @@ export function exportManager(config: ExportConfig) {
         context: ExportContext,
         contentType: FlattenedContentType,
         elements: readonly Readonly<ElementModels.ContentItemElement>[],
-        contentItem: Readonly<ContentItemModels.ContentItem>
+        contentItem: Readonly<ContentItemModels.ContentItem>,
+        language: string
     ): MigrationElements => {
         return contentType.elements
             .toSorted((a, b) => {
@@ -134,6 +136,7 @@ export function exportManager(config: ExportConfig) {
                         exportElement: itemElement,
                         typeElement: typeElement,
                         contentItem,
+                        language,
                     })
                 };
 
@@ -147,16 +150,18 @@ export function exportManager(config: ExportConfig) {
         typeElement: FlattenedContentTypeElement;
         exportElement: ElementModels.ContentItemElement;
         contentItem: Readonly<ContentItemModels.ContentItem>;
+        language: string;
     }): MigrationElementValue => {
         try {
             return exportTransforms[data.typeElement.type]({
                 context: data.context,
                 typeElement: data.typeElement,
                 contentItem: data.contentItem,
+                language: data.language,
                 skipMissingLinkedItems: config.skipMissingLinkedItems,
                 logger: logger,
                 exportElement: {
-                    components: data.exportElement.components.map((component) => mapToMigrationComponent(data.context, component, data.contentItem)),
+                    components: data.exportElement.components.map((component) => mapToMigrationComponent(data.context, component, data.contentItem, data.language)),
                     value: data.exportElement.value,
                     urlSlugMode: data.exportElement.mode
                 }

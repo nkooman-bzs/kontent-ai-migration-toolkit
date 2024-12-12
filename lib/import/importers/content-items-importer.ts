@@ -32,6 +32,8 @@ export function contentItemsImporter(data: {
         );
     };
 
+    const createdContentItems = new Map<string, ContentItemModels.ContentItem>();
+
     const prepareContentItemAsync = async (
         logSpinner: LogSpinnerData,
         migrationContentItem: MigrationItem
@@ -44,6 +46,14 @@ export function contentItemsImporter(data: {
             return {
                 contentItem: itemStateInTargetEnv.item,
                 status: 'itemAlreadyExists'
+            };
+        }
+
+        // Checks if the content item was already created in this import session
+        if (createdContentItems.has(migrationContentItem.system.codename)) {
+            return {
+                contentItem: createdContentItems.get(migrationContentItem.system.codename)!,
+                status: 'created'
             };
         }
 
@@ -70,7 +80,9 @@ export function contentItemsImporter(data: {
             type: 'contentItem',
             logSpinner: logSpinner,
             itemName: `${migrationContentItem.system.codename} (${migrationContentItem.system.language.codename})`
-        });
+        })
+
+        createdContentItems.set(createdContentItem.codename, createdContentItem);
 
         return {
             contentItem: createdContentItem,

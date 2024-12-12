@@ -35,8 +35,9 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
         let processedItemsCount: number = 1;
 
         const requests = data.items.map((item) =>
-            limit(() => {
-                return data.processAsync(item, logSpinner).then((output) => {
+            limit(async () => {
+                try {
+                    const output = await data.processAsync(item, logSpinner);
                     const itemInfo = data.itemInfo(item);
                     const prefix = getPercentagePrefix(processedItemsCount, data.items.length);
 
@@ -48,7 +49,7 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
 
                     processedItemsCount++;
                     return output;
-                }).catch(error => {
+                } catch (error) {
                     if (data.failOnError ?? true) {
                         throw error;
                     }
@@ -56,16 +57,23 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
                     const errorData = extractErrorData(error);
                     const itemInfo = data.itemInfo(item);
                     const codename = 'codename' in itemInfo ? `(${itemInfo.codename as string})` : '';
-                    
+
                     logSpinner({
                         type: 'processingError',
                         message: `Failed to process item: '${itemInfo.title}' ${codename}. Message: ${errorData.message}`,
                         itemCodename: 'codename' in itemInfo ? itemInfo.codename as string : undefined,
-                        itemName: itemInfo.title
+                        itemName: itemInfo.title,
+                        languageCodename: itemInfo.languageCodename,
+                        data: item
+                    });
+
+                    logSpinner({
+                        type: 'kontentDebug',
+                        message: JSON.stringify(item),
                     });
 
                     return null;
-                });
+                }
             })
         );
 

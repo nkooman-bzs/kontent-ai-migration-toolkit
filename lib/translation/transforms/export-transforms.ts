@@ -30,7 +30,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
         return +data.exportElement.value;
     },
     date_time: (data) => data.exportElement.value?.toString(),
-    rich_text: (data) => transformRichTextValue(data.exportElement, data.context, data.logger, data.skipMissingLinkedItems, data.contentItem),
+    rich_text: (data) => transformRichTextValue(data.exportElement, data.context, data.logger, data.skipMissingLinkedItems, data.contentItem, data.language),
     asset: (data) => {
         if (!data.exportElement.value) {
             return [];
@@ -200,7 +200,8 @@ function transformRichTextValue(
     context: ExportContext,
     logger: Logger,
     skipMissingLinkedItems: boolean | undefined,
-    contentItem: ContentItemModels.ContentItem
+    contentItem: ContentItemModels.ContentItem,
+    language: string
 ): MigrationRichTextElementValue | undefined {
     if (!exportElement || !exportElement.value) {
         return {
@@ -227,6 +228,8 @@ function transformRichTextValue(
                 message: `Failed to get linked item with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
                 itemCodename: contentItem.codename,
                 itemName: contentItem.name,
+                languageCodename: language,
+                data: contentItem
             })
 
             return {
@@ -253,6 +256,8 @@ function transformRichTextValue(
                 message: `Failed to get linked item with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
                 itemCodename: contentItem.codename,
                 itemName: contentItem.name,
+                languageCodename: language,
+                data: contentItem
             })
 
             return {
@@ -279,6 +284,8 @@ function transformRichTextValue(
                 message: `Failed to get linked asset with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
                 itemCodename: contentItem.codename,
                 itemName: contentItem.name,
+                languageCodename: language,
+                data: contentItem
             })
 
             return {
@@ -305,6 +312,8 @@ function transformRichTextValue(
                 message: `Failed to get linked asset with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
                 itemCodename: contentItem.codename,
                 itemName: contentItem.name,
+                languageCodename: language,
+                data: contentItem
             })
 
             return {

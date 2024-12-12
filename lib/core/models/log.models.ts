@@ -5,6 +5,7 @@ type MigrationToolErrorType =
     | 'mapError'
     | 'publishError'
     | 'processingError'
+    | 'kontentDebug'
 
 export type DebugType =
     | 'error'
@@ -28,6 +29,8 @@ export interface LogMessage {
     readonly message: string;
     readonly itemName?: string;
     readonly itemCodename?: string;
+    readonly languageCodename?: string;
+    readonly data?: unknown;
 }
 
 export interface LogSpinnerMessage extends LogMessage {

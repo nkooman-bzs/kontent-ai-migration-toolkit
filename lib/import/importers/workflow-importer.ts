@@ -39,6 +39,8 @@ export function workflowImporter(config: {
                                 message: `Publish failed for item "${data.migrationItem.system.name}" (${data.migrationItem.system.codename}), it's likely there's new element limitations that are not met by the imported data. Error received: ${error.message}. Validation errors: ${JSON.stringify(error.validationErrors, null, 2)}`,
                                 itemCodename: data.migrationItem.system.codename,
                                 itemName: data.migrationItem.system.name,
+                                languageCodename: data.migrationItem.system.language.codename,
+                                data: data.migrationItem
                             })
                             return;
                         }

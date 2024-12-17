@@ -68,6 +68,9 @@ export function languageVariantImporter(config: {
                 response.data.item.externalId = data.preparedContentItem.externalId;
                 response.data._raw.item.codename = data.preparedContentItem.codename;
                 response.data._raw.item.external_id = data.preparedContentItem.externalId;
+                response.data.language.codename = data.migrationItem.system.language.codename;
+                response.data._raw.language.codename = data.migrationItem.system.language.codename;
+                
 
                 return response.data;
             },

@@ -47,7 +47,6 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
                         type: itemInfo.itemType
                     });
 
-                    processedItemsCount++;
                     return output;
                 } catch (error) {
                     if (data.failOnError ?? true) {
@@ -73,6 +72,8 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
                     });
 
                     return null;
+                } finally {
+                    processedItemsCount++;
                 }
             })
         );

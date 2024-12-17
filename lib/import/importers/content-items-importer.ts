@@ -22,7 +22,7 @@ export function contentItemsImporter(data: {
     ): boolean => {
         const collection = findRequired(
             data.importContext.environmentData.collections,
-            (collection) => collection.codename === migrationContentItem.system.collection.codename,
+            (collection) => collection.id === contentItem.collection.id,
             `Invalid collection '${migrationContentItem.system.collection.codename}'`
         );
 

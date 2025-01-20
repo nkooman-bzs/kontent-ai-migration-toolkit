@@ -9,6 +9,7 @@ import {
 import chalk from 'chalk';
 import {
     AssetStateInSourceEnvironmentById,
+    extractErrorData,
     findRequired,
     FlattenedContentType,
     is404Error,
@@ -233,46 +234,61 @@ export async function exportContextFetcherAsync(config: DefaultExportContextConf
             message: `Preparing '${chalk.yellow(config.exportItems.length.toString())}' items for export`
         });
 
-        return (
-            await processItemsAsync<SourceExportItem, ExportItem>({
-                logger: config.logger,
-                action: 'Preparing content items & language variants',
-                parallelLimit: 1,
-                itemInfo: (input) => {
-                    return {
-                        title: `${input.itemCodename} (${input.languageCodename})`,
-                        itemType: 'exportItem'
-                    };
-                },
-                items: exportItems,
-                processAsync: async (requestItem, logSpinner) => {
-                    const contentItem = await getContentItemAsync(requestItem, logSpinner);
-                    const versions = await getExportItemVersionsAsync(requestItem, contentItem, logSpinner);
+        const processedItems = await processItemsAsync<SourceExportItem, ExportItem>({
+            logger: config.logger,
+            action: 'Preparing content items & language variants',
+            parallelLimit: 1,
+            itemInfo: (input) => {
+                return {
+                    title: `${input.itemCodename} (${input.languageCodename})`,
+                    itemType: 'exportItem'
+                };
+            },
+            items: exportItems,
+            processAsync: async (requestItem, logSpinner) => {
+                const contentItem = await getContentItemAsync(requestItem, logSpinner);
+                const versions = await getExportItemVersionsAsync(requestItem, contentItem, logSpinner);
 
-                    // get shared attributes from any version
-                    const anyVersion = versions[0];
-                    if (!anyVersion) {
-                        throwErrorForItemRequest(requestItem, `Expected at least 1 version of the content item`);
-                    }
-
-                    const { collection, contentType, language, workflow } = validateExportItem({
-                        sourceItem: requestItem,
-                        contentItem: contentItem,
-                        languageVariant: anyVersion.languageVariant
-                    });
-
-                    return {
-                        contentItem,
-                        versions,
-                        contentType,
-                        requestItem,
-                        workflow,
-                        collection,
-                        language
-                    };
+                // get shared attributes from any version
+                const anyVersion = versions[0];
+                if (!anyVersion) {
+                    throwErrorForItemRequest(requestItem, `Expected at least 1 version of the content item`);
                 }
-            })
-        )
+
+                const { collection, contentType, language, workflow } = validateExportItem({
+                    sourceItem: requestItem,
+                    contentItem: contentItem,
+                    languageVariant: anyVersion.languageVariant
+                });
+
+                return {
+                    contentItem,
+                    versions,
+                    contentType,
+                    requestItem,
+                    workflow,
+                    collection,
+                    language
+                };
+            }
+        });
+
+        const failedItems = processedItems.filter((m) => m.state === 'error');
+
+        const errors = failedItems.map((m) => [
+            `Codename: ${chalk.yellow(m.inputItem.itemCodename)}`,
+            `Language Codename: ${chalk.yellow(m.inputItem.languageCodename)}`,
+            `${chalk.red(extractErrorData(m.error).message)}`
+        ])
+
+        errors.forEach((error, index) => {
+            config.logger.log({ message: `${chalk.red(`\nError #${index + 1}`)}` });
+            error.forEach((m) => {
+                config.logger.log({ message: m });
+            });
+        });
+
+        return processedItems
             .filter((m) => m.state === 'valid')
             .map((m) => m.outputItem);
     };

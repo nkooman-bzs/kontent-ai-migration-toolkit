@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import pLimit from 'p-limit';
 import { ItemInfo, ItemProcessingResult } from '../models/core.models.js';
 import { LogSpinnerData, Logger } from '../models/log.models.js';
+import { extractErrorData } from 'lib/core/utils/error.utils.js';
 
 type ProcessSetAction =
     | 'Fetching assets'
@@ -45,8 +46,6 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
                             message: itemInfo.title,
                             type: itemInfo.itemType
                         });
-
-                        processedItemsCount++;
                         return output;
                     })
                     .then<ItemProcessingResult<InputItem, OutputItem>>((outputItem) => {
@@ -56,6 +55,7 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
                                 inputItem: item
                             };
                         }
+
                         return {
                             inputItem: item,
                             outputItem: outputItem,
@@ -63,11 +63,27 @@ export async function processItemsAsync<InputItem, OutputItem>(data: {
                         };
                     })
                     .catch<ItemProcessingResult<InputItem, OutputItem>>((error) => {
+                        const errorData = extractErrorData(error);
+                        const itemInfo = data.itemInfo(item);
+                        const codename = 'codename' in itemInfo ? `(${itemInfo.codename as string})` : '';
+                    
+                        logSpinner({
+                            type: 'processingError',
+                            message: `Failed to process item: '${itemInfo.title}' ${codename}. Message: ${errorData.message}`,
+                            itemCodename: 'codename' in itemInfo ? itemInfo.codename as string : undefined,
+                            itemName: itemInfo.title,
+                            languageCodename: itemInfo.languageCodename,
+                            data: item
+                        });
+    
                         return {
                             state: 'error',
                             inputItem: item,
                             error: error
                         };
+                    })
+                    .finally(() => {
+                        processedItemsCount++;
                     });
             })
         );

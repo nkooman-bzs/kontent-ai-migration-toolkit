@@ -44,6 +44,9 @@ export type ExportTransformFunc = (data: {
     readonly typeElement: FlattenedContentTypeElement;
     readonly exportElement: ExportElement;
     readonly context: ExportContext;
+    readonly contentItem: ContentItemModels.ContentItem;
+    readonly language: string;
+    readonly logger: Logger;
 }) => MigrationElementTransformData;
 
 export interface ExportContext {

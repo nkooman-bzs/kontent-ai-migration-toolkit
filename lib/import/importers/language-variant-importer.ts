@@ -42,28 +42,32 @@ export function languageVariantImporter(config: {
         return await runMapiRequestAsync({
             logger: config.logger,
             func: async () => {
-                return (
-                    await config.client
-                        .upsertLanguageVariant()
-                        .byItemCodename(data.preparedContentItem.inputItem.system.codename)
-                        .byLanguageCodename(data.migrationItem.system.language.codename)
-                        .withData(() => {
-                            return {
-                                elements: Object.entries(data.migrationItemVersion.elements).map(([codename, migrationElement]) => {
-                                    return getElementContract(data.migrationItem, migrationElement, codename);
-                                }),
-                                workflow: {
-                                    workflow_identifier: {
-                                        codename: data.workflow.codename
-                                    },
-                                    step_identifier: {
-                                        codename: data.workflow.steps[0].codename // use always first step
-                                    }
+                const response = await config.client
+                    .upsertLanguageVariant()
+                    .byItemCodename(data.preparedContentItem.inputItem.system.codename)
+                    .byLanguageCodename(data.migrationItem.system.language.codename)
+                    .withData(() => {
+                        return {
+                            elements: Object.entries(data.migrationItemVersion.elements).map(([codename, migrationElement]) => {
+                                return getElementContract(data.migrationItem, migrationElement, codename);
+                            }),
+                            workflow: {
+                                workflow_identifier: {
+                                    codename: data.workflow.codename
+                                },
+                                step_identifier: {
+                                    codename: data.workflow.steps[0].codename // use always first step
                                 }
-                            };
-                        })
-                        .toPromise()
-                ).data;
+                            }
+                        };
+                    })
+                    .toPromise();
+                 
+                response.data.item.codename = data.preparedContentItem.inputItem.system.codename;
+                response.data._raw.item.codename = data.preparedContentItem.inputItem.system.codename;
+                response.data.language.codename = data.migrationItem.system.language.codename;
+
+                return response.data;
             },
             action: 'upsert',
             type: 'languageVariant',
@@ -314,6 +318,7 @@ export function languageVariantImporter(config: {
                 return {
                     itemType: 'languageVariant',
                     title: input.system.name,
+                    codename: input.system.codename,
                     partA: input.system.language.codename
                 };
             },

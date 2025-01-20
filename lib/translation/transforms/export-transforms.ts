@@ -1,6 +1,6 @@
-import { ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
+import { ContentItemModels, ContentTypeElements, TaxonomyModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
-import { MigrationElementTransformData, MigrationElementType, MigrationReference, findRequired, isNotUndefined } from '../../core/index.js';
+import { Logger, MigrationElementTransformData, MigrationElementType, MigrationReference, findRequired, isNotUndefined } from '../../core/index.js';
 import { ExportContext, ExportElement, ExportTransformFunc } from '../../export/index.js';
 import { richTextProcessor } from '../helpers/rich-text.processor.js';
 
@@ -37,7 +37,7 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
             display_timezone: data.exportElement.displayTimezone ?? undefined
         };
     },
-    rich_text: (data) => transformRichTextValue(data.exportElement, data.context),
+    rich_text: (data) => transformRichTextValue(data.exportElement, data.context, data.logger, data.contentItem, data.language),
     asset: (data) => {
         if (!data.exportElement.value) {
             return {
@@ -120,16 +120,17 @@ export const exportTransforms: Readonly<Record<MigrationElementType, ExportTrans
             value: data.exportElement.value
                 .map((m) => m.id)
                 .filter(isNotUndefined)
-                .map<MigrationReference>((id) => {
+                .map<MigrationReference | undefined>((id) => {
                     const itemState = data.context.getItemStateInSourceEnvironment(id);
 
                     if (itemState.item) {
                         // reference item by codename
                         return { codename: itemState.item.codename };
                     } else {
-                        throw Error(`Missing item with id '${chalk.red(id)}'`);
+                        return undefined
                     }
                 })
+                .filter(isNotUndefined)
         };
     },
     custom: (data) => {
@@ -221,7 +222,7 @@ function findTaxonomy(termId: string, taxonomy: Readonly<TaxonomyModels.Taxonomy
     return undefined;
 }
 
-function transformRichTextValue(exportElement: ExportElement | undefined, context: ExportContext): MigrationElementTransformData {
+function transformRichTextValue(exportElement: ExportElement | undefined, context: ExportContext, logger: Logger, contentItem: ContentItemModels.ContentItem, language: string): MigrationElementTransformData {
     if (!exportElement || !exportElement.value) {
         return {
             components: [],
@@ -236,7 +237,18 @@ function transformRichTextValue(exportElement: ExportElement | undefined, contex
         const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
         if (!itemInEnv) {
-            throw Error(`Failed to get item with id '${chalk.red(id)}'`);
+            logger.log({
+                type: 'linkedItemsError',
+                message: `Failed to get linked item with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+                itemCodename: contentItem.codename,
+                itemName: contentItem.name,
+                languageCodename: language,
+                data: contentItem
+            })
+
+            return {
+                codename: null
+            };
         }
 
         return {
@@ -249,7 +261,16 @@ function transformRichTextValue(exportElement: ExportElement | undefined, contex
         const itemInEnv = context.getItemStateInSourceEnvironment(id).item;
 
         if (!itemInEnv) {
-            throw Error(`Failed to get item with id '${chalk.red(id)}'`);
+            logger.log({
+                type: 'linkedItemsError',
+                message: `Failed to get linked item with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+                itemCodename: contentItem.codename,
+                itemName: contentItem.name,
+            })
+
+            return {
+                codename: null
+            };
         }
 
         return {
@@ -262,7 +283,16 @@ function transformRichTextValue(exportElement: ExportElement | undefined, contex
         const assetInEnv = context.getAssetStateInSourceEnvironment(id).asset;
 
         if (!assetInEnv) {
-            throw Error(`Failed to get asset with id '${chalk.red(id)}'`);
+            logger.log({
+                type: 'linkedItemsError',
+                message: `Failed to get linked asset with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+                itemCodename: contentItem.codename,
+                itemName: contentItem.name,
+            })
+
+            return {
+                codename: null
+            };
         }
 
         return {
@@ -275,7 +305,16 @@ function transformRichTextValue(exportElement: ExportElement | undefined, contex
         const assetInEnv = context.getAssetStateInSourceEnvironment(id).asset;
 
         if (!assetInEnv) {
-            throw Error(`Failed to get asset with id '${chalk.red(id)}'`);
+            logger.log({
+                type: 'linkedItemsError',
+                message: `Failed to get linked asset with id '${chalk.red(id)}' in item '${contentItem.name}' (${contentItem.codename})`,
+                itemCodename: contentItem.codename,
+                itemName: contentItem.name,
+            })
+
+            return {
+                codename: null
+            };
         }
 
         return {

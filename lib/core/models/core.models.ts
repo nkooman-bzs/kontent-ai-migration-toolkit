@@ -49,6 +49,7 @@ export type LanguageVariantWorkflowState =
 export interface ItemInfo {
     readonly title: string;
     readonly itemType: MapiType | MigrationItemType;
+    readonly languageCodename?: string;
 }
 
 export interface ErrorData {

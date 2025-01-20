@@ -164,13 +164,19 @@ export function assetsImporter(data: {
         return await runMapiRequestAsync({
             logger: data.logger,
             func: async () => {
+                const contentType = mime.getType(migrationAsset.filename);
+
+                if (!contentType) {
+                    throw new Error(`Could not determine content type for file '${migrationAsset.filename}'`);
+                }
+
                 return (
                     await data.client
                         .uploadBinaryFile()
                         .withData({
                             binaryData: migrationAsset.binary_data,
                             contentLength: geSizeInBytes(migrationAsset.binary_data),
-                            contentType: mime.getType(migrationAsset.filename) ?? '',
+                            contentType: contentType,
                             filename: migrationAsset.filename
                         })
                         .toPromise()

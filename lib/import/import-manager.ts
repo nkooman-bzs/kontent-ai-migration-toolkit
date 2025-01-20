@@ -117,7 +117,7 @@ export function importManager(config: ImportConfig) {
                         .map((m) => {
                             return {
                                 codename: m.inputItem.codename,
-                                error: extractErrorData(m.state === 'error').message
+                                error: extractErrorData(m.error).message
                             };
                         }),
                     ...importResult.editedAssets
@@ -125,7 +125,7 @@ export function importManager(config: ImportConfig) {
                         .map((m) => {
                             return {
                                 codename: m.inputItem.migrationAsset.codename,
-                                error: extractErrorData(m.state === 'error').message
+                                error: extractErrorData(m.error).message
                             };
                         })
                 ]
@@ -145,7 +145,7 @@ export function importManager(config: ImportConfig) {
                         return {
                             codename: m.inputItem.system.codename,
                             type: m.inputItem.system.type,
-                            error: extractErrorData(m.state === 'error').message
+                            error: extractErrorData(m.error).message
                         };
                     })
             },
@@ -167,7 +167,7 @@ export function importManager(config: ImportConfig) {
                             codename: m.inputItem.system.codename,
                             language: m.inputItem.system.language,
                             type: m.inputItem.system.type,
-                            error: extractErrorData(m.state === 'error').message
+                            error: extractErrorData(m.error).message
                         };
                     })
             }
@@ -183,7 +183,7 @@ export function importManager(config: ImportConfig) {
             ]),
             ...reportResult.contentItems.failed.map((m) => [
                 `Object type: ${chalk.yellow('Content item')}`,
-                `Codename:${chalk.yellow(m.codename)}`,
+                `Codename: ${chalk.yellow(m.codename)}`,
                 `Content Type: ${chalk.yellow(m.type.codename)}`,
                 `${chalk.red(m.error)}`
             ]),

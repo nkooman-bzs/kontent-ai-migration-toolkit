@@ -1,4 +1,4 @@
-import { AssetFolderModels, AssetModels, CollectionModels, ElementModels } from '@kontent-ai/management-sdk';
+import { AssetFolderModels, AssetModels, CollectionModels, ContentItemModels, ElementModels } from '@kontent-ai/management-sdk';
 import chalk from 'chalk';
 import {
     extractErrorData,
@@ -30,43 +30,56 @@ export function exportManager(config: ExportConfig) {
     const managementClient = getMigrationManagementClient(config);
 
     const getMigrationItems = (context: ExportContext): readonly MigrationItem[] => {
-        return context.exportItems.map<MigrationItem>((exportItem) => mapToMigrationItem(context, exportItem));
+        return context.exportItems.map<MigrationItem | null>((exportItem) => mapToMigrationItem(context, exportItem,)).filter(item => item !== null);
     };
 
-    const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem): Readonly<MigrationItem> => {
-        const migrationItem: MigrationItem = {
-            system: {
-                name: exportItem.contentItem.name,
-                codename: exportItem.contentItem.codename,
-                language: { codename: exportItem.language.codename },
-                type: { codename: exportItem.contentType.contentTypeCodename },
-                collection: { codename: exportItem.collection.codename },
-                workflow: {
-                    codename: exportItem.workflow.codename
-                }
-            },
-            versions: exportItem.versions.map<MigrationItemVersion>((version) => {
-                return {
-                    elements: getMigrationElements(context, exportItem.contentType, version.languageVariant.elements),
-                    schedule: {
-                        publish_time: version.languageVariant.schedule.publishTime ?? undefined,
-                        publish_display_timezone: version.languageVariant.schedule.publishDisplayTimezone ?? undefined,
-                        unpublish_display_timezone: version.languageVariant.schedule.unpublishDisplayTimezone ?? undefined,
-                        unpublish_time: version.languageVariant.schedule.unpublishTime ?? undefined
-                    },
-                    workflow_step: {
-                        codename: version.workflowStepCodename
+    const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem): Readonly<MigrationItem | null> => {
+        try {
+            const migrationItem: MigrationItem = {
+                system: {
+                    name: exportItem.contentItem.name,
+                    codename: exportItem.contentItem.codename,
+                    language: { codename: exportItem.language.codename },
+                    type: { codename: exportItem.contentType.contentTypeCodename },
+                    collection: { codename: exportItem.collection.codename },
+                    workflow: {
+                        codename: exportItem.workflow.codename
                     }
-                };
-            })
-        };
+                },
+                versions: exportItem.versions.map<MigrationItemVersion>((version) => {
+                    return {
+                        elements: getMigrationElements(context, exportItem.contentType, version.languageVariant.elements, exportItem.contentItem, exportItem.language.codename),
+                        schedule: {
+                            publish_time: version.languageVariant.schedule.publishTime ?? undefined,
+                            publish_display_timezone: version.languageVariant.schedule.publishDisplayTimezone ?? undefined,
+                            unpublish_display_timezone: version.languageVariant.schedule.unpublishDisplayTimezone ?? undefined,
+                            unpublish_time: version.languageVariant.schedule.unpublishTime ?? undefined
+                        },
+                        workflow_step: {
+                            codename: version.workflowStepCodename
+                        }
+                    };
+                })
+            };
+    
+            return migrationItem;
+        } catch (error) {
+            logger.log({
+                type: 'mapError',
+                message: `Failed to map item '${chalk.yellow(exportItem.contentItem.name)}': '${chalk.red(exportItem.contentItem.codename)}'. ${error as string}`,
+                itemName: exportItem.contentItem.name,
+                itemCodename: exportItem.contentItem.codename
+            });
 
-        return migrationItem;
+            return null;
+        }
     };
 
     const mapToMigrationComponent = (
         context: ExportContext,
-        component: Readonly<ElementModels.ContentItemElementComponent>
+        component: Readonly<ElementModels.ContentItemElementComponent>,
+        contentItem: Readonly<ContentItemModels.ContentItem>,
+        language: string
     ): MigrationComponent => {
         const componentType = context.environmentData.contentTypes.find((m) => m.contentTypeId === component.type.id);
 
@@ -81,7 +94,7 @@ export function exportManager(config: ExportConfig) {
                     codename: componentType.contentTypeCodename
                 }
             },
-            elements: getMigrationElements(context, componentType, component.elements)
+            elements: getMigrationElements(context, componentType, component.elements, contentItem, language)
         };
 
         return migrationItem;
@@ -90,7 +103,9 @@ export function exportManager(config: ExportConfig) {
     const getMigrationElements = (
         context: ExportContext,
         contentType: FlattenedContentType,
-        elements: readonly Readonly<ElementModels.ContentItemElement>[]
+        elements: readonly Readonly<ElementModels.ContentItemElement>[],
+        contentItem: Readonly<ContentItemModels.ContentItem>,
+        language: string
     ): MigrationElements => {
         return contentType.elements
             .toSorted((a, b) => {
@@ -115,7 +130,9 @@ export function exportManager(config: ExportConfig) {
                         context: context,
                         contentType: contentType,
                         exportElement: itemElement,
-                        typeElement: typeElement
+                        typeElement: typeElement,
+                        contentItem,
+                        language
                     })
                 };
 
@@ -128,13 +145,18 @@ export function exportManager(config: ExportConfig) {
         readonly contentType: FlattenedContentType;
         readonly typeElement: FlattenedContentTypeElement;
         readonly exportElement: ElementModels.ContentItemElement;
+        readonly contentItem: ContentItemModels.ContentItem;
+        readonly language: string;
     }): MigrationElementTransformData => {
         try {
             return exportTransforms[data.typeElement.type]({
                 context: data.context,
                 typeElement: data.typeElement,
+                contentItem: data.contentItem,
+                language: data.language,
+                logger,
                 exportElement: {
-                    components: data.exportElement.components.map((component) => mapToMigrationComponent(data.context, component)),
+                    components: data.exportElement.components.map((component) => mapToMigrationComponent(data.context, component, data.contentItem, data.language)),
                     value: data.exportElement.value,
                     urlSlugMode: data.exportElement.mode,
                     displayTimezone: data.exportElement.display_timezone
@@ -242,7 +264,7 @@ export function exportManager(config: ExportConfig) {
                     managementClient: managementClient
                 })
             ).getExportContextAsync();
-
+            
             const migrationData: MigrationData = {
                 items: MigrationItemsSchema.parse(getMigrationItems(exportContext)),
                 assets: MigrationAssetsSchema.parse(await exportAssetsAsync(exportContext))

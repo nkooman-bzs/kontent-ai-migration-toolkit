@@ -35,7 +35,7 @@ const rteRegexes = {
         objectTagRegex: new RegExp(`<object(.+?)</object>`, 'g'),
         imgTagRegex: new RegExp(`<img(.+?)</img>`, 'g'),
         figureTagRegex: new RegExp(`<figure(.+?)</figure>`, 'g'),
-        linkTagRegex: new RegExp(`<a([\\s\\S]*)</a>`, 'gm')
+        linkTagRegex: new RegExp(`<a([\\s\\S]*?)</a>`, 'gm')
     },
     ids: {
         dataItemIdAttrRegex: new RegExp(`${attributes.ids.itemIdAttributeName}=\\"(.+?)\\"`),
@@ -255,7 +255,7 @@ export function richTextProcessor() {
 
                     return objectTag.replaceAll(
                         `${attributes.codenames.itemCodenameAttribute}="${codename}"`,
-                        `${attributes.ids.itemExternalIdAttributeName}="${itemState.externalIdToUse}"`
+                        `${attributes.ids.externalIdAttributeName}="${itemState.externalIdToUse}"`
                     );
                 }
             }

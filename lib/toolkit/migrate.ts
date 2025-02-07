@@ -23,6 +23,7 @@ export interface MigrationConfig {
     readonly logger?: Logger;
     readonly sourceEnvironment: MigrationSource;
     readonly targetEnvironment: ManagementClientConfig;
+    readonly mapMigrationData: (data: MigrationData) => MigrationData;
 }
 
 export interface MigrationResult {
@@ -56,7 +57,7 @@ export async function migrateAsync(config: MigrationConfig): Promise<MigrationRe
             const importResult = await importAsync({
                 ...config.targetEnvironment,
                 logger: logger,
-                data: migrationData,
+                data: config.mapMigrationData(migrationData),
                 externalIdGenerator: config.externalIdGenerator
             });
 

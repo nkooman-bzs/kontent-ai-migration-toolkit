@@ -45,7 +45,8 @@ export async function migrateActionAsync(argsFetcher: CliArgumentsFetcher): Prom
         targetEnvironment: {
             environmentId: targetEnvironmentId,
             apiKey: targetApiKey
-        }
+        },
+        mapMigrationData: (data) => data
     });
 
     log.log({ type: 'completed', message: `Migration has been successful` });

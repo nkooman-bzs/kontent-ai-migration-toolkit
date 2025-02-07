@@ -129,7 +129,7 @@ export function assetsImporter(data: {
                       codename: migrationCollection.codename
                   }
               }
-            : undefined;
+            : { reference: null };
     };
 
     const mapAssetFolder = (

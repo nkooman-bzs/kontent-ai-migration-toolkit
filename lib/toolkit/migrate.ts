@@ -6,7 +6,6 @@ import {
     ManagementClientConfig,
     MigrationAsset,
     MigrationData,
-    MigrationElement,
     MigrationItem,
     executeWithTrackingAsync,
     getDefaultLogger
@@ -31,7 +30,7 @@ export interface MigrationConfig {
     readonly mapMigrationData: (data: MigrationData) => MigrationData;
     readonly onAction: (action: string | null) => void;
     readonly onItem: (item: ExportItem | MigrationItem | null) => void;
-    readonly onElement: (element: FlattenedContentTypeElement | MigrationElement | null) => void;
+    readonly onElement: (element: FlattenedContentTypeElement | string | null) => void;
     readonly onAsset: (asset: AssetModels.Asset | MigrationAsset | null) => void;
 }
 

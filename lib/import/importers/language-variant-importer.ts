@@ -27,7 +27,7 @@ export function languageVariantImporter(config: {
     readonly client: Readonly<ManagementClient>;
     readonly onAction: (action: string | null) => void;
     readonly onItem: (item: MigrationItem | null) => void;
-    readonly onElement: (element: MigrationElement | null) => void;
+    readonly onElement: (element: string | null) => void;
 }) {
     const workflowImporter = workflowImporterInit({
         logger: config.logger,
@@ -52,7 +52,7 @@ export function languageVariantImporter(config: {
                     .withData(() => {
                         return {
                             elements: Object.entries(data.migrationItemVersion.elements).map(([codename, migrationElement]) => {
-                                config.onElement(migrationElement);
+                                config.onElement(codename);
                                 return getElementContract(data.migrationItem, migrationElement, codename);
                             }),
                             workflow: {

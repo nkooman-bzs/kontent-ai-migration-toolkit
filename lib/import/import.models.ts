@@ -21,6 +21,7 @@ import {
     ManagementClientConfig,
     MigrationAsset,
     MigrationData,
+    MigrationElement,
     MigrationElementTransformData,
     MigrationElementType,
     MigrationItem,
@@ -78,6 +79,10 @@ export interface ImportConfig extends ManagementClientConfig {
     readonly externalIdGenerator?: ExternalIdGenerator;
     readonly createReportFile?: boolean;
     readonly logger?: Logger;
+    readonly onAction: (action: string | null) => void;
+    readonly onItem: (item: MigrationItem | null) => void;
+    readonly onElement: (element: FlattenedContentTypeElement | MigrationElement | null) => void;
+    readonly onAsset: (asset: AssetModels.Asset | MigrationAsset | null) => void;
 }
 
 export interface AssetToEdit {

@@ -25,6 +25,9 @@ export function languageVariantImporter(config: {
     readonly preparedContentItems: readonly ImportedItem[];
     readonly importContext: ImportContext;
     readonly client: Readonly<ManagementClient>;
+    readonly onAction: (action: string | null) => void;
+    readonly onItem: (item: MigrationItem | null) => void;
+    readonly onElement: (element: MigrationElement | null) => void;
 }) {
     const workflowImporter = workflowImporterInit({
         logger: config.logger,
@@ -49,6 +52,7 @@ export function languageVariantImporter(config: {
                     .withData(() => {
                         return {
                             elements: Object.entries(data.migrationItemVersion.elements).map(([codename, migrationElement]) => {
+                                config.onElement(migrationElement);
                                 return getElementContract(data.migrationItem, migrationElement, codename);
                             }),
                             workflow: {
@@ -63,6 +67,7 @@ export function languageVariantImporter(config: {
                     })
                     .toPromise();
                  
+                config.onElement(null)
                 response.data.item.codename = data.preparedContentItem.inputItem.system.codename;
                 response.data._raw.item.codename = data.preparedContentItem.inputItem.system.codename;
                 response.data.language.codename = data.migrationItem.system.language.codename;
@@ -180,6 +185,7 @@ export function languageVariantImporter(config: {
         });
 
         // first import published version if it exists
+        config.onAction('import-published');
         const publishedLanguageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined = publishedVersion
             ? await importVersionAsync({
                   logSpinner: logSpinner,
@@ -188,18 +194,23 @@ export function languageVariantImporter(config: {
                   migrationItemVersion: publishedVersion
               })
             : undefined;
+        config.onAction(null);
 
         // if target env contains published version & imported version not, unpublish it from the target env
         if (targetVariantState.publishedLanguageVariant && !publishedVersion) {
+            config.onAction('unpublish-language-variant');
             await workflowImporter.unpublishLanguageVariantAsync({
                 logSpinner,
                 migrationItem
             });
+            config.onAction('move-to-draft-step');
             await workflowImporter.moveToDraftStepAsync({
                 logSpinner,
                 migrationItem
             });
         }
+
+        config.onAction('import-draft');
         const draftLanguageVariant: Readonly<LanguageVariantModels.ContentItemLanguageVariant> | undefined = draftVersion
             ? await importVersionAsync({
                   logSpinner: logSpinner,
@@ -209,6 +220,7 @@ export function languageVariantImporter(config: {
                   createNewVersion: publishedLanguageVariant ? true : false
               })
             : undefined;
+        config.onAction(null);
 
         return [publishedLanguageVariant, draftLanguageVariant].filter(isNotUndefined);
     };
@@ -256,6 +268,7 @@ export function languageVariantImporter(config: {
         // there is likely a bug which causes /published endpoint to return invalid scheduled state
         // use conditions below to determine scheduled state to use - this will be fixed in future
         if (languageVariantToPrepare.workflowState?.scheduledState) {
+            config.onAction('cancel-scheduled-state');
             await cancelScheduledStateAsync({
                 logSpinner: data.logSpinner,
                 migrationItem: data.migrationItem,
@@ -271,10 +284,12 @@ export function languageVariantImporter(config: {
         await match(languageVariantToPrepare.workflowState?.workflowState)
             .with('published', async () => {
                 // create new version if language variant is published
+                config.onAction('create-new-version');
                 await workflowImporter.createNewVersionOfLanguageVariantAsync(changeWorkflowData);
             })
             .with('archived', async () => {
                 // move to draft step if language variant is archived
+                config.onAction('move-to-draft-step');
                 await workflowImporter.moveToDraftStepAsync(changeWorkflowData);
             })
             .otherwise(() => {});
@@ -323,6 +338,7 @@ export function languageVariantImporter(config: {
                 };
             },
             processAsync: async (migrationItem, logSpinner) => {
+                config.onItem(migrationItem);
                 const contentItem = findRequired(
                     config.preparedContentItems,
                     (item) => item.inputItem.system.codename === migrationItem.system.codename,

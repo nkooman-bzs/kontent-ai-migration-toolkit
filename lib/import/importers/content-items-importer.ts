@@ -7,6 +7,7 @@ export function contentItemsImporter(data: {
     readonly logger: Logger;
     readonly client: Readonly<ManagementClient>;
     readonly importContext: ImportContext;
+    readonly onItem: (item: MigrationItem) => void;
 }) {
     const shouldUpdateContentItem = (migrationItem: MigrationItem, contentItem: Readonly<ContentItemModels.ContentItem>): boolean => {
         const collection = findRequired(
@@ -128,6 +129,7 @@ export function contentItemsImporter(data: {
                 };
             },
             processAsync: async (item, logSpinner) => {
+                data.onItem(item);
                 return await importContentItemAsync(logSpinner, item);
             }
         });

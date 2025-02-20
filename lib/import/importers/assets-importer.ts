@@ -19,6 +19,7 @@ export function assetsImporter(data: {
     readonly logger: Logger;
     readonly client: Readonly<ManagementClient>;
     readonly importContext: ImportContext;
+    readonly onAsset: (asset: MigrationAsset) => void;
 }) {
     const getAssetsToUpload = (): readonly MigrationAsset[] => {
         return data.importContext.categorizedImportData.assets
@@ -82,6 +83,7 @@ export function assetsImporter(data: {
                 };
             },
             processAsync: async (assetEditRequest, logSpinner) => {
+                data.onAsset(assetEditRequest.migrationAsset);
                 let uploadedBinaryFile: Readonly<AssetModels.AssetFileReference> | undefined;
 
                 if (assetEditRequest.replaceBinaryFile) {
@@ -207,6 +209,7 @@ export function assetsImporter(data: {
                 };
             },
             processAsync: async (migrationAsset, logSpinner) => {
+                data.onAsset(migrationAsset);
                 const uploadedBinaryFile = await uploadBinaryFileAsync(migrationAsset, logSpinner);
 
                 return await runMapiRequestAsync({

@@ -32,7 +32,11 @@ export async function exportActionAsync(cliFetcher: CliArgumentsFetcher): Promis
                 itemCodename: m,
                 languageCodename: language
             };
-        })
+        }),
+        onAction: () => undefined,
+        onAsset: () => undefined,
+        onElement: () => undefined,
+        onItem: () => undefined
     });
 
     await storeAsync({

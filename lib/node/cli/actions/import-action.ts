@@ -29,7 +29,11 @@ export async function importActionAsync(argsFetcher: CliArgumentsFetcher): Promi
         baseUrl: baseUrl,
         environmentId: environmentId,
         apiKey: apiKey,
-        createReportFile: createReportFile
+        createReportFile: createReportFile,
+        onAction: () => undefined,
+        onAsset: () => undefined,
+        onElement: () => undefined,
+        onItem: () => undefined
     });
 
     log.log({ type: 'completed', message: `Import has been successful` });

@@ -56,7 +56,8 @@ export function importManager(config: ImportConfig) {
         return await assetsImporter({
             client: targetEnvironmentClient,
             importContext: importContext,
-            logger: logger
+            logger: logger,
+            onAsset: config.onAsset
         }).importAsync();
     };
 
@@ -71,7 +72,8 @@ export function importManager(config: ImportConfig) {
         return await contentItemsImporter({
             client: targetEnvironmentClient,
             importContext: importContext,
-            logger: logger
+            logger: logger,
+            onItem: config.onItem
         }).importAsync();
     };
 
@@ -90,7 +92,10 @@ export function importManager(config: ImportConfig) {
             client: targetEnvironmentClient,
             importContext: importContext,
             logger: logger,
-            preparedContentItems: contentItems
+            preparedContentItems: contentItems,
+            onItem: config.onItem,
+            onAction: config.onAction,
+            onElement: config.onElement
         }).importAsync();
     };
 
@@ -216,13 +221,20 @@ export function importManager(config: ImportConfig) {
             ).getImportContextAsync();
 
             // #1 Assets
+            config.onAction('import-assets');
             const { editedAssets, uploadedAssets } = await importAssetsAsync(importContext);
+            config.onAsset(null)
 
             // #2 Content items
+            config.onAction('import-content-items');
             const contentItems = await importContentItemsAsync(importContext);
+            config.onItem(null)
 
             // #3 Language variants
+            config.onAction('import-language-variants');
             const languageVariants = await importLanguageVariantsAsync(importContext, contentItems);
+            config.onItem(null)
+            config.onElement(null)
 
             const reportResult = getReportResult({
                 contentItems,

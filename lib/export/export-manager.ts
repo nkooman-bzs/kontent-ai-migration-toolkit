@@ -34,6 +34,8 @@ export function exportManager(config: ExportConfig) {
     };
 
     const mapToMigrationItem = (context: ExportContext, exportItem: ExportItem): Readonly<MigrationItem | null> => {
+        config.onAction(`processing-item`);
+        config.onItem(exportItem);
         try {
             const migrationItem: MigrationItem = {
                 system: {
@@ -72,6 +74,8 @@ export function exportManager(config: ExportConfig) {
             });
 
             return null;
+        } finally {
+            config.onItem(null)
         }
     };
 
@@ -118,6 +122,8 @@ export function exportManager(config: ExportConfig) {
                 return 0;
             })
             .reduce<Writeable<MigrationElements>>((model, typeElement) => {
+                config.onElement(typeElement);
+
                 const itemElement = findRequired(
                     elements,
                     (m) => m.element.id === typeElement.id,
@@ -135,6 +141,8 @@ export function exportManager(config: ExportConfig) {
                         language
                     })
                 };
+
+                config.onElement(null);
 
                 return model;
             }, {});
@@ -210,6 +218,9 @@ export function exportManager(config: ExportConfig) {
                 },
                 items: assets,
                 processAsync: async (asset, logSpinner) => {
+                    config.onAction(`processing-asset`);
+                    config.onAsset(asset);
+
                     const assetCollection: Readonly<CollectionModels.Collection> | undefined = context.environmentData.collections.find(
                         (m) => m.id === asset.collection?.reference?.id
                     );
@@ -269,11 +280,13 @@ export function exportManager(config: ExportConfig) {
                 items: MigrationItemsSchema.parse(getMigrationItems(exportContext)),
                 assets: MigrationAssetsSchema.parse(await exportAssetsAsync(exportContext))
             };
-
+            
             logger.log({
                 type: 'completed',
                 message: `Finished export`
             });
+
+            config.onAction(null);
 
             return migrationData;
         }

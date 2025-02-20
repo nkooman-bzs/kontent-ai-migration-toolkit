@@ -1,5 +1,6 @@
 import {
     AssetFolderModels,
+    AssetModels,
     CollectionModels,
     ContentItemModels,
     LanguageModels,
@@ -66,6 +67,10 @@ export interface SourceExportItem {
 export interface ExportConfig extends ManagementClientConfig {
     readonly exportItems: readonly SourceExportItem[];
     readonly logger?: Logger;
+    readonly onAction: (action: string | null) => void;
+    readonly onItem: (item: ExportItem | null) => void;
+    readonly onElement: (element: FlattenedContentTypeElement | null) => void;
+    readonly onAsset: (asset: AssetModels.Asset | null) => void;
 }
 
 export interface DefaultExportContextConfig {
